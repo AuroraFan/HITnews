@@ -21,7 +21,7 @@ def getDi(html):
 html = getHtml("http://today.hit.edu.cn/")
 list = getDi(html)
 i = 0
-f =open("2.html","w+")
+
 
 reli = r'<a href=\'(/news.*?\.htm)\' title=\'.*?\' target=\'_blank\'>'
 cpli = re.compile(reli)
@@ -39,10 +39,10 @@ for n in list:
 	print i,n.group()
 	print "\n"
 	ul = n.group()
-
 	listli=cpli.finditer(ul)
 	for m in listli:
 		li = m.group()
+		mark=1
 
 		href=cphref.finditer(li)
 		for x in href:
@@ -54,21 +54,31 @@ for n in list:
 		for y in title:
 			yt=y.group()
 			yt=yt[7:-1]
-		sql = "insert into today (id,type, href, title) \
-			VALUES (null, '%d', '%s', '%s' )" % \
-			(i, xh, yt)
 
+
+		sql = "SELECT * FROM today where type=%d and href=\"%s\""  % (i,xh)
+		print sql
 		try:
-			# 执行sql语句
 			cursor.execute(sql)
-			# 提交到数据库执行
-			db.commit()
+			results = cursor.fetchall()
+			for row in results:
+				mark=0    
 		except:
-			# 发生错误时回滚
-			db.rollback()
+			print "search fail"
 
-	f.write("\n\n")
-
+		if mark==1:
+			sql = "insert into today (id,type, href, title) \
+				VALUES (null, '%d', '%s', '%s' )" % \
+				(i, xh, yt)
+	
+			try:
+				# 执行sql语句
+				cursor.execute(sql)
+				# 提交到数据库执行
+				db.commit()
+			except:
+				# 发生错误时回滚
+				db.rollback()
 
 print i
 sql = "SELECT * FROM today"
@@ -85,7 +95,7 @@ try:
                 print Href
                 print Title
 except:
-        print "Error: unaf, lname, agetosex, incomeh data"
+        print "insert fail"
 
 
 db.close()
